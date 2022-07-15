@@ -2,31 +2,44 @@
 // Modules
 const {Menu, shell, app} = require('electron')
 
+// Platform 
+const isMac = process.platform === 'darwin' ? true : false
+
 // Module function to create main app menu
 module.exports = () => {
 
     // Menu template
     let template = [
-        ...(process.platform === 'darwin' ? 
-            // true
-            [   {
-                role: 'appMenu'
-                }
-            ]
-             : 
-            // false
-            [
+        ...(isMac ? [{ role: 'appMenu' }] : []),
+        {
+        ...(isMac ? 
+                // Mac 
                 {
                     label: 'File',
                     submenu: [
                         {
-                            label: 'Exit',
-                            click: () => app.quit()
+                        label: 'Quit',
+                        accelerator: 'Cmd+W',
+                        click: () => app.quit()
                         }
+
                     ]
                 }
-            ]
-            ),
+                :
+                // Win
+                {
+                    label: 'File',
+                    submenu: [
+                        {
+                        label: 'Exit',
+                        accelerator: 'Ctrl+W',
+                        click: () => app.quit()
+                        }
+
+                    ]
+                }
+            )
+        },
         {
             role: 'editMenu'
         },

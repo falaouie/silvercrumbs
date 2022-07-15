@@ -1,5 +1,15 @@
 // Modules
 const {app, BrowserWindow} = require('electron')
+const appMenu = require('./menu')
+
+
+// Platform 
+const isMac = process.platform === 'darwin' ? true : false
+
+// Set Environment
+process.env.NODE_ENV = 'development'
+
+const isDev = process.env.NODE_ENV !== 'production' ? true : false
 
 // const updater = require('./updater')
 
@@ -8,13 +18,13 @@ const {app, BrowserWindow} = require('electron')
 let mainWindow
 
 // Create a new BrowserWindow when `app` is ready
-function createWindow () {
+function createMainWindow () {
   // check for updates after 3 seconds
 
  // setTimeout(updater, 3000)
 
   mainWindow = new BrowserWindow({
-  //  width: 1000, height: 800,
+    title: 'Silver System',
     show: false,
     webPreferences: {
       // --- !! IMPORTANT !! ---
@@ -24,6 +34,9 @@ function createWindow () {
       nodeIntegration: true
     }
   })
+
+  // Create main app menu
+  appMenu()
 
   // Load index.html into the new BrowserWindow
   mainWindow.loadURL('http://devsilver.alawiyeh.com')
@@ -35,20 +48,25 @@ function createWindow () {
   mainWindow.on('closed',  () => {
     mainWindow = null
   })
+
   // kirmel el commit el jdeed
   mainWindow.maximize()
   mainWindow.show()
 }
 
 // Electron `app` is ready
-app.on('ready', createWindow)
+app.on('ready', () => {
+  createMainWindow()
+
+  mainWindow.on('closed', () => mainWindow = null)
+})
 
 // Quit when all windows are closed - (Not macOS - Darwin)
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
+  if (!isMac) app.quit()
 })
 
 // When app icon is clicked and app is running, (macOS) recreate the BrowserWindow
 app.on('activate', () => {
-  if (mainWindow === null) createWindow()
+  if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
 })

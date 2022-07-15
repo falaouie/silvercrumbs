@@ -1,11 +1,8 @@
 // Modules
-const {app, BrowserWindow} = require('electron')
-const appMenu = require('./menu')
-
+const {app, BrowserWindow, Menu} = require('electron')
 
 // Platform 
 const isMac = process.platform === 'darwin' ? true : false
-
 // Set Environment
 process.env.NODE_ENV = 'development'
 
@@ -16,6 +13,7 @@ const isDev = process.env.NODE_ENV !== 'production' ? true : false
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
+let aboutWindow
 
 // Create a new BrowserWindow when `app` is ready
 function createMainWindow () {
@@ -26,6 +24,7 @@ function createMainWindow () {
   mainWindow = new BrowserWindow({
     title: 'Silver System',
     show: false,
+    backgroundColor: '#eceeee',
     webPreferences: {
       // --- !! IMPORTANT !! ---
       // Disable 'contextIsolation' to allow 'nodeIntegration'
@@ -34,9 +33,6 @@ function createMainWindow () {
       nodeIntegration: true
     }
   })
-
-  // Create main app menu
-  appMenu()
 
   // Load index.html into the new BrowserWindow
   mainWindow.loadURL('http://devsilver.alawiyeh.com')
@@ -54,8 +50,103 @@ function createMainWindow () {
   mainWindow.show()
 }
 
+function createAboutWindow () {
+  aboutWindow = new BrowserWindow({
+    title: 'About Silver System',
+    width: 600,
+    height: 300,
+    backgroundColor: '#eceeee',
+    resizable: false,
+    webPreferences: {
+      // --- !! IMPORTANT !! ---
+      // Disable 'contextIsolation' to allow 'nodeIntegration'
+      // 'contextIsolation' defaults to "true" as from Electron v12
+      contextIsolation: false,
+      nodeIntegration: true
+    }
+  })
+
+  aboutWindow.loadFile('./about.html')
+  if (isDev) aboutWindow.webContents.openDevTools();
+
+  // Listen for window being closed
+  aboutWindow.on('closed',  () => {
+    aboutWindow = null
+  })
+}
+
+// Menu template
+let template = [
+  ...(isMac ? [{
+      label: app.name,
+      submenu: [
+          {
+             label: 'About',
+             click: createAboutWindow
+          },
+          {
+            role: 'quit'
+          }
+      ]
+  }] : []),
+  // { role: 'fileMenu' }
+  {
+      label: 'File',
+      submenu: [
+      isMac ? { role: 'close' } : { role: 'quit' }
+      ]
+  },
+  {
+      role: 'editMenu'
+  },
+  {
+      role: 'windowMenu'
+  },
+  ...(isDev ? [
+      {
+          label: 'Develepor',
+          submenu: [
+              { role: 'reload'},
+              { role: 'forcereload'},
+              { type: 'separator'},
+              { role: 'toggledevtools'}
+          ]
+      }
+  ] : []),
+  ...(!isMac ? [
+    {
+      label: 'Help',
+      submenu: [
+        {
+          label: 'About',
+          click: createAboutWindow
+       }
+      ]
+    }
+  ] : [])
+  /*
+  {
+      role: 'help',
+      submenu: [
+          {
+              label: 'Learn More',
+              click: () => {
+                  shell.openExternal('https://google.com')
+              }
+          }
+      ]
+  }
+  */
+]
+
+// Build menu
+let menu = Menu.buildFromTemplate(template)
+
+//  Set as main application menu
+Menu.setApplicationMenu(menu)
+
 // Electron `app` is ready
-app.on('ready', () => {
+app.whenReady().then(() => {
   createMainWindow()
 
   mainWindow.on('closed', () => mainWindow = null)
